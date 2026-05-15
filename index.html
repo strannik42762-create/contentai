@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<!-- saved from url=(0057)file:///C:/Users/ai/Downloads/article-generator-vk_7.html -->
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentAI — Генератор статей (Groq)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="file:///C:/Users/ai/Downloads/ContentAI%20%E2%80%94%20%D0%93%D0%B5%D0%BD%D0%B5%D1%80%D0%B0%D1%82%D0%BE%D1%80%20%D1%81%D1%82%D0%B0%D1%82%D0%B5%D0%B9%20(Groq)_files/css2" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0e12;
+  --bg2: #16161d;
+  --bg3: #1e1e28;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --accent: #7c5cfc;
+  --accent2: #a78bfa;
+  --accent-glow: rgba(124,92,252,0.25);
+  --text: #f0eeff;
+  --text2: #9490b0;
+  --text3: #5a5670;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --font-head: 'Unbounded', sans-serif;
+  --font-body: 'Golos Text', sans-serif;
+  --r: 12px;
+  --r-sm: 8px;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; overflow: hidden; }
+
+/* ── Layout ─────────────────────────────── */
+.app { display: grid; grid-template-columns: 270px 1fr; height: 100vh; }
+
+/* ── Sidebar ─────────────────────────────── */
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 20px 16px;
+  gap: 22px;
+  overflow-y: auto;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-head);
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+.logo-icon svg { width: 16px; height: 16px; }
+
+.s-section { display: flex; flex-direction: column; gap: 8px; }
+.s-label {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  font-family: var(--font-body);
+  font-size: 11px; padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s;
+  user-select: none;
+}
+.chip:hover { border-color: var(--accent2); color: var(--accent2); }
+.chip.on {
+  background: rgba(124,92,252,0.18);
+  border-color: var(--accent);
+  color: var(--accent2);
+}
+
+.tone-list { display: flex; flex-direction: column; gap: 3px; }
+.tone-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 12px;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  user-select: none;
+}
+.tone-item:hover { background: var(--bg3); color: var(--text); }
+.tone-item.on {
+  background: rgba(124,92,252,0.12);
+  border-color: rgba(124,92,252,0.3);
+  color: var(--accent2);
+}
+.tone-icon { font-size: 15px; line-height: 1; }
+
+.slider-row { display: flex; align-items: center; gap: 10px; }
+.slider-row input[type=range] {
+  flex: 1; height: 4px; cursor: pointer;
+  accent-color: var(--accent);
+}
+.slider-val { font-size: 12px; color: var(--accent2); min-width: 52px; text-align: right; font-weight: 500; }
+
+.api-field {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.api-input {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
+  transition: border 0.15s;
+  width: 100%;
+}
+.api-input:focus { border-color: var(--accent); }
+.api-input::placeholder { color: var(--text3); }
+.api-hint { font-size: 10px; color: var(--text3); line-height: 1.4; }
+.api-hint a { color: var(--accent2); text-decoration: none; }
+
+/* ── Main ─────────────────────────────── */
+.main { display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--bg2);
+}
+.topic-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.topic-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border 0.15s;
+}
+.topic-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.topic-input::placeholder { color: var(--text3); }
+
+.gen-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 10px 18px;
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  white-space: nowrap;
+  transition: all 0.18s;
+  box-shadow: 0 0 20px var(--accent-glow);
+  min-width: 160px; justify-content: center;
+}
+.gen-btn:hover { background: #6d4de8; transform: translateY(-1px); box-shadow: 0 0 28px var(--accent-glow); }
+.gen-btn:active { transform: translateY(0); }
+.gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.gen-btn .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Output area ─────────────────────────────── */
+.output-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  background: var(--bg2);
+}
+.tab {
+  font-size: 12px; font-weight: 500;
+  padding: 10px 16px;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.tab:hover { color: var(--text2); }
+.tab.on { color: var(--accent2); border-bottom-color: var(--accent); }
+
+.content-scroll { flex: 1; overflow-y: auto; padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; }
+.content-scroll::-webkit-scrollbar { width: 4px; }
+.content-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ── Stats bar ─────────────────────────────── */
+.stats-bar {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px 16px;
+}
+.stat {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text2);
+}
+.stat-val { font-weight: 600; color: var(--text); }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot-amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.dot-red { background: var(--red); }
+
+/* ── Article ─────────────────────────────── */
+.article-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 28px 32px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.article-inner {
+  max-width: 620px;
+}
+.article-title {
+  font-family: var(--font-head);
+  font-size: 20px; font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  max-width: 620px;
+}
+.article-hashtags { display: flex; flex-wrap: wrap; gap: 5px; }
+.hashtag {
+  font-size: 11px; padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(124,92,252,0.12);
+  color: var(--accent2);
+  border: 1px solid rgba(124,92,252,0.25);
+}
+.article-divider { height: 1px; background: var(--border); }
+.article-body { display: flex; flex-direction: column; gap: 20px; max-width: 620px; }
+.article-para {
+  font-size: 15px; line-height: 1.8;
+  color: #c4bfe0;
+  max-width: 600px;
+}
+.article-para .lead { color: var(--text); font-weight: 500; }
+
+/* ── Keywords ─────────────────────────────── */
+.kw-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+}
+.kw-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 10px; }
+.kw-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.kw-tag {
+  font-size: 12px; padding: 4px 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text2);
+}
+
+/* ── Sources ─────────────────────────────── */
+.sources { display: flex; flex-direction: column; gap: 6px; }
+.source-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text2);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.source-item:last-child { border-bottom: none; }
+.source-ico { color: var(--text3); font-size: 14px; }
+
+/* ── Actions ─────────────────────────────── */
+.action-bar {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+  background: var(--bg2);
+}
+.act-btn {
+  font-family: var(--font-body);
+  font-size: 12px; padding: 7px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+}
+.act-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--border2); }
+.act-btn.primary {
+  background: var(--accent);
+  color: #fff; border-color: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+.act-btn.primary:hover { background: #6d4de8; }
+
+/* ── States ─────────────────────────────── */
+.empty-state, .loading-state, .error-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; padding: 80px 20px;
+  color: var(--text3); font-size: 13px; text-align: center;
+}
+.empty-icon { font-size: 40px; opacity: 0.3; }
+.loader-ring {
+  width: 36px; height: 36px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loader-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.lstep { font-size: 12px; display: flex; align-items: center; gap: 7px; }
+.lstep.done { color: var(--green); }
+.lstep.active { color: var(--accent2); }
+.lstep.wait { color: var(--text3); }
+.error-state { color: var(--red); }
+
+/* ── Tab panels ─────────────────────────────── */
+.panel { display: none; }
+.panel.on { display: flex; flex-direction: column; gap: 14px; }
+
+/* ── Headings variants ─────────────────────────────── */
+.variant-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  cursor: pointer; transition: border 0.15s;
+}
+.variant-card:hover { border-color: var(--accent); }
+.variant-text { font-size: 13px; line-height: 1.5; color: var(--text2); flex: 1; }
+.use-btn {
+  font-size: 11px; padding: 4px 10px;
+  background: rgba(124,92,252,0.15);
+  border: 1px solid rgba(124,92,252,0.3);
+  border-radius: 6px; color: var(--accent2);
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.use-btn:hover { background: var(--accent); color: #fff; }
+
+/* ── SEO analysis ─────────────────────────────── */
+.seo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seo-metric {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+}
+.seo-metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.seo-metric-val { font-size: 20px; font-weight: 600; color: var(--text); font-family: var(--font-head); }
+.seo-metric-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.bar-wrap { height: 4px; background: var(--border2); border-radius: 4px; margin-top: 8px; }
+.bar-fill { height: 4px; border-radius: 4px; background: var(--accent); transition: width 0.6s ease; }
+.bar-fill.green { background: var(--green); }
+.bar-fill.amber { background: var(--amber); }
+
+/* ── Limits widget ───────────────────── */
+.limits-widget {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.limits-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.limits-title {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text3);
+}
+.limits-status {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text3);
+  transition: background 0.3s;
+}
+.limits-status.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.limits-status.warn { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.limits-status.empty { background: var(--red); }
+.limit-row { display: flex; flex-direction: column; gap: 3px; }
+.limit-row-head { display: flex; justify-content: space-between; align-items: baseline; }
+.limit-row-label { font-size: 11px; color: var(--text2); }
+.limit-row-val { font-size: 11px; font-weight: 500; color: var(--text); }
+.limit-bar-wrap { height: 3px; background: var(--border2); border-radius: 3px; }
+.limit-bar-fill {
+  height: 3px; border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+.limit-bar-fill.ok { background: var(--green); }
+.limit-bar-fill.warn { background: var(--amber); }
+.limit-bar-fill.low { background: var(--red); }
+.limits-note { font-size: 10px; color: var(--text3); line-height: 1.4; }
+.limits-refresh {
+  font-size: 10px; color: var(--accent2);
+  cursor: pointer; background: none; border: none;
+  padding: 0; font-family: var(--font-body);
+}
+.limits-refresh:hover { text-decoration: underline; }
+
+/* instruction panel */
+.instr-panel { display: flex; flex-direction: column; gap: 14px; padding-bottom: 10px; }
+.instr-group { display: flex; flex-direction: column; gap: 6px; }
+.instr-group-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); }
+.instr-textarea { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 10px 12px; color: var(--text); font-family: var(--font-body); font-size: 13px; line-height: 1.6; resize: vertical; outline: none; transition: border 0.15s; min-height: 70px; width: 100%; }
+.instr-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.instr-textarea::placeholder { color: var(--text3); }
+.instr-save-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--r-sm); padding: 9px 18px; font-family: var(--font-head); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; box-shadow: 0 0 14px var(--accent-glow); }
+.instr-save-btn:hover { background: #6d4de8; }
+.instr-saved { font-size: 11px; color: var(--green); display: none; }
+.instr-hint { font-size: 11px; color: var(--text3); line-height: 1.5; background: var(--bg3); border-radius: var(--r-sm); padding: 10px 12px; border-left: 2px solid var(--accent); }
+.style-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.style-chip { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border2); color: var(--text2); background: transparent; cursor: pointer; transition: all 0.15s; user-select: none; }
+.style-chip:hover { border-color: var(--accent2); color: var(--accent2); }
+.style-chip.on { background: rgba(124,92,252,0.18); border-color: var(--accent); color: var(--accent2); }
+
+/* ── VK Auth ─────────────────────────── */
+.vk-section { display: flex; flex-direction: column; gap: 8px; }
+.vk-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px;
+  background: #0077FF;
+  border: none; border-radius: var(--r-sm);
+  color: #fff; font-family: var(--font-body);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  width: 100%;
+}
+.vk-btn:hover { background: #0066dd; transform: translateY(-1px); }
+.vk-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.vk-profile {
+  display: none;
+  align-items: center; gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0,119,255,0.1);
+  border: 1px solid rgba(0,119,255,0.25);
+  border-radius: var(--r-sm);
+}
+.vk-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  border: 1px solid rgba(0,119,255,0.4);
+}
+.vk-avatar-placeholder {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #0077FF; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 600;
+  color: #fff; flex-shrink: 0;
+}
+.vk-name { font-size: 12px; color: var(--text); font-weight: 500; flex: 1; }
+.vk-logout {
+  font-size: 10px; color: var(--text3); cursor: pointer;
+  background: none; border: none; font-family: var(--font-body);
+  padding: 2px 4px; border-radius: 4px; transition: color 0.15s;
+}
+.vk-logout:hover { color: var(--red); }
+.vk-appid-row { display: flex; flex-direction: column; gap: 4px; }
+.vk-appid-input {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); padding: 7px 10px;
+  color: var(--text); font-family: var(--font-body);
+  font-size: 12px; outline: none; width: 100%;
+  transition: border 0.15s;
+}
+.vk-appid-input:focus { border-color: #0077FF; }
+.vk-appid-input::placeholder { color: var(--text3); }
+.vk-hint { font-size: 10px; color: var(--text3); line-height: 1.5; }
+.vk-hint a { color: #0077FF; text-decoration: none; }
+
+/* publish modal */
+.pub-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 100; align-items: center; justify-content: center;
+}
+.pub-overlay.on { display: flex; }
+.pub-modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 24px;
+  width: 420px; display: flex; flex-direction: column; gap: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.pub-title { font-family: var(--font-head); font-size: 14px; font-weight: 600; color: var(--text); }
+.pub-subtitle { font-size: 12px; color: var(--text2); margin-top: -8px; }
+.pub-options { display: flex; flex-direction: column; gap: 8px; }
+.pub-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r-sm); cursor: pointer;
+  transition: all 0.15s;
+}
+.pub-option:hover { border-color: var(--border2); }
+.pub-option.selected { border-color: #0077FF; background: rgba(0,119,255,0.08); }
+.pub-option-icon { font-size: 18px; width: 24px; text-align: center; }
+.pub-option-label { font-size: 13px; color: var(--text); flex: 1; }
+.pub-option-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all 0.15s; }
+.pub-option.selected .pub-option-check { background: #0077FF; border-color: #0077FF; color: #fff; }
+.pub-where {
+  font-size: 11px; color: var(--text3);
+  display: flex; align-items: center; gap: 6px;
+}
+.pub-where select {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); color: var(--text);
+  font-family: var(--font-body); font-size: 11px;
+  padding: 4px 8px; outline: none; flex: 1;
+}
+.pub-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.pub-cancel { font-family: var(--font-body); font-size: 12px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; }
+.pub-cancel:hover { background: var(--bg3); }
+.pub-send {
+  font-family: var(--font-head); font-size: 11px; font-weight: 600;
+  padding: 8px 18px; border-radius: var(--r-sm); border: none;
+  background: #0077FF; color: #fff; cursor: pointer;
+  letter-spacing: 0.04em; transition: all 0.15s;
+}
+.pub-send:hover { background: #0066dd; }
+.pub-send:disabled { opacity: 0.5; cursor: not-allowed; }
+.pub-status { font-size: 12px; text-align: center; min-height: 18px; }
+.pub-status.ok { color: var(--green); }
+.pub-status.err { color: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+      </div>
+      ContentAI
+    </div>
+
+    <!-- API Key -->
+    <div class="s-section">
+      <div class="s-label">API ключ Groq</div>
+      <div class="api-field">
+        <input class="api-input" id="apiKey" type="password" placeholder="gsk_...">
+        <div class="api-hint">Бесплатно, без карты, все регионы: <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a></div>
+      </div>
+    </div>
+
+
+    <!-- Model selector -->
+    <div class="s-section">
+      <div class="s-label">Модель (бесплатные)</div>
+      <div class="tone-list" id="modelList">
+        <div class="tone-item on" data-val="llama-3.3-70b-versatile">
+          <span class="tone-icon">🦙</span> Llama 3.3 70B <span style="font-size:10px;color:var(--green);margin-left:auto">быстрый</span>
+        </div>
+        <div class="tone-item" data-val="llama-3.1-8b-instant">
+          <span class="tone-icon">⚡</span> Llama 3.1 8B <span style="font-size:10px;color:var(--green);margin-left:auto">молниеносный</span>
+        </div>
+        <div class="tone-item" data-val="deepseek-r1-distill-llama-70b">
+          <span class="tone-icon">🔍</span> DeepSeek R1 70B <span style="font-size:10px;color:var(--green);margin-left:auto">умный</span>
+        </div>
+        <div class="tone-item" data-val="gemma2-9b-it">
+          <span class="tone-icon">💎</span> Gemma 2 9B <span style="font-size:10px;color:var(--green);margin-left:auto">точный</span>
+        </div>
+      </div>
+    </div>
+    <!-- Platforms -->
+    <div class="s-section">
+      <div class="s-label">Платформа</div>
+      <div class="chips" id="platforms">
+        <div class="chip" data-val="ВКонтакте">ВКонтакте</div>
+        <div class="chip on" data-val="Яндекс Дзен">Яндекс Дзен</div>
+        <div class="chip" data-val="Одноклассники">ОК</div>
+        <div class="chip" data-val="X/Twitter">X / Twitter</div>
+        <div class="chip" data-val="Telegram">Telegram</div>
+        <div class="chip" data-val="Pikabu">Pikabu</div>
+        <div class="chip" data-val="vk.cc">vk.cc</div>
+        <div class="chip" data-val="TenChat">TenChat</div>
+      </div>
+    </div>
+
+    <!-- Tone -->
+    <div class="s-section">
+      <div class="s-label">Тон материала</div>
+      <div class="tone-list" id="tones">
+        <div class="tone-item on" data-val="вирусный, вовлекающий, эмоциональный">
+          <span class="tone-icon">🔥</span> Вирусный / вовлекающий
+        </div>
+        <div class="tone-item" data-val="экспертный, обучающий, авторитетный">
+          <span class="tone-icon">🎓</span> Экспертный / обучающий
+        </div>
+        <div class="tone-item" data-val="новостной, фактологический, нейтральный">
+          <span class="tone-icon">📰</span> Новостной
+        </div>
+        <div class="tone-item" data-val="лёгкий, развлекательный, с юмором">
+          <span class="tone-icon">😄</span> Лёгкий / развлекательный
+        </div>
+      </div>
+    </div>
+
+    <!-- Length -->
+    <div class="s-section">
+      <div class="s-label">Длина чтения</div>
+      <div class="slider-row">
+        <input type="range" id="lenSlider" min="1" max="5" value="2">
+        <div class="slider-val" id="lenVal">~5 мин</div>
+      </div>
+    </div>
+
+    <!-- Language -->
+    <div class="s-section">
+      <div class="s-label">Язык</div>
+      <div class="chips" id="langs">
+        <div class="chip on" data-val="русский">Русский</div>
+        <div class="chip" data-val="английский">English</div>
+        <div class="chip" data-val="украинский">Українська</div>
+      </div>
+    </div>
+
+
+    <!-- VK Auth -->
+    <div class="s-section vk-section">
+      <div class="s-label">ВКонтакте</div>
+
+      <button class="vk-btn" id="vkLoginBtn" onclick="vkLogin()">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.6-.19 1.37 1.26 2.186 1.817.617.422 1.086.33 1.086.33l2.182-.03s1.141-.071.6-.967c-.044-.073-.314-.661-1.618-1.869-1.366-1.265-1.184-1.06.462-3.246.999-1.332 1.399-2.146 1.274-2.494-.12-.332-.855-.244-.855-.244l-2.455.015s-.182-.025-.317.055c-.132.078-.217.26-.217.26s-.387 1.028-.903 1.902c-1.088 1.848-1.524 1.946-1.703 1.832-.414-.267-.311-1.075-.311-1.649 0-1.793.272-2.54-.529-2.733-.266-.064-.461-.107-1.141-.114-.872-.009-1.609.003-2.025.207-.278.136-.492.44-.362.457.162.022.528.099.722.363.25.341.241 1.107.241 1.107s.144 2.11-.336 2.372c-.329.18-.782-.187-1.754-1.862-.498-.859-.874-1.81-.874-1.81s-.072-.176-.202-.27c-.156-.114-.375-.15-.375-.15l-2.33.015s-.35.01-.478.162c-.115.135-.009.414-.009.414s1.826 4.27 3.893 6.422c1.896 1.973 4.047 1.843 4.047 1.843h.974z"></path></svg>
+        Войти через ВКонтакте
+      </button>
+
+      <div class="vk-profile" id="vkProfile">
+        <div class="vk-avatar-placeholder" id="vkAvatarPlaceholder">В</div>
+        <img class="vk-avatar" id="vkAvatar" style="display:none">
+        <div class="vk-name" id="vkName">—</div>
+        <button class="vk-logout" onclick="vkLogout()">Выйти</button>
+      </div>
+
+      <div id="vkGroupIdRow" style="display:none;flex-direction:column;gap:5px;">
+        <div class="vk-hint">ID группы для публикации (0 = личная стена):</div>
+        <div style="display:flex;gap:5px;">
+          <input class="vk-appid-input" id="vkGroupIdInput" placeholder="например: 227014028" style="flex:1;font-size:11px;">
+          <button onclick="saveVkGroup()" style="background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);padding:5px 9px;font-size:11px;cursor:pointer;">✓</button>
+        </div>
+        <span id="vkGroupSaved" style="display:none;font-size:10px;color:var(--green)">✓ Сохранено</span>
+        <div class="vk-hint">Узнать ID: <a href="https://regvk.com/id/" target="_blank">regvk.com/id</a></div>
+      </div>
+    </div>
+
+    <!-- Limits -->
+    <div class="s-section">
+      <div class="limits-widget" id="limitsWidget">
+        <div class="limits-header">
+          <div class="limits-title">Лимиты API</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="limits-refresh" onclick="fetchLimits()">↻ обновить</button>
+            <div class="limits-status" id="limitsStatus"></div>
+          </div>
+        </div>
+        <div id="limitsBody"><div class="limits-note">Лимиты недоступны для этой модели</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topic-wrap">
+        <input class="topic-input" id="topicInput" placeholder="Введите тему статьи… например: «Как ИИ меняет рынок труда в 2025 году»">
+      </div>
+      <button class="gen-btn" id="genBtn" onclick="generate()">
+        <span id="btnIcon" class="">✦</span>
+        <span id="btnText">Генерировать</span>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="output-area">
+      <div class="tabs">
+        <div class="tab on" data-tab="article">Статья</div>
+        <div class="tab" data-tab="seo">SEO-анализ</div>
+        <div class="tab" data-tab="headlines">Варианты заголовка</div>
+        <div class="tab" data-tab="sources">Источники</div>
+        <div class="tab" data-tab="instruction">⚙️ Инструкция</div>
+      </div>
+
+      <div class="content-scroll" id="contentScroll">
+
+        <!-- Article panel -->
+        <div class="panel on" id="panel-article">
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">✦</div>
+            <div>Введите тему и нажмите <strong>Генерировать</strong></div>
+            <div style="font-size:12px;opacity:0.6">Статья появится здесь</div>
+          </div>
+          <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="loader-ring"></div>
+            <div class="loader-steps" id="loaderSteps">
+              <div class="lstep done" id="step1">✓ Анализирую тему…</div>
+              <div class="lstep active" id="step2">⟳ Подбираю SEO-ключи…</div>
+              <div class="lstep wait" id="step3">○ Пишу статью…</div>
+              <div class="lstep wait" id="step4">○ Финальная обработка…</div>
+            </div>
+          </div>
+          <div id="errorState" class="error-state" style="display:none">
+            <div>⚠ Ошибка генерации</div>
+            <div id="errorMsg" style="font-size:12px;margin-top:4px;color:var(--text2)"></div>
+          </div>
+          <div id="articleResult" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="stats-bar" id="statsBar">
+    <div class="stat"><div class="dot dot-green"></div> SEO: <span class="stat-val">85/100</span></div>
+    <div class="stat"><div class="dot dot-green"></div> Уникальность: <span class="stat-val">94%</span></div>
+    <div class="stat"><div class="dot dot-green"></div> Читаемость: <span class="stat-val">Отлично</span></div>
+    <div class="stat">⏱ Чтение: <span class="stat-val">2 мин 30 сек</span></div>
+    <div class="stat">📝 Слов: <span class="stat-val">450</span></div>
+    <div class="stat">🔥 Виральность: <span class="stat-val">8/10</span></div>
+  </div>
+            <div class="article-card">
+              <div class="article-title" id="artTitle">Логотип, который изменил все</div>
+              <div class="article-hashtags" id="artHashtags"><div class="hashtag">#логотип</div><div class="hashtag">#FedEx</div><div class="hashtag">#дизайн</div><div class="hashtag">#бренд</div><div class="hashtag">#маркетинг</div><div class="hashtag">#успех</div></div>
+              <div class="article-divider"></div>
+              <div class="article-body" id="artBody"><div class="article-para"><span class="lead">Вы когда-нибудь замечали, что в логотипе FedEx спрятан стрелка? Это не просто совпадение, а гениальная идея, которая изменила лицо компании.</span></div><div class="article-para">Логотип FedEx был создан в 1994 году дизайнером Линдомонтом Комином. Он смог создать простой, но эффективный логотип, который сразу же стал узнаваемым.</div><div class="article-para">При ближайшем рассмотрении логотипа FedEx можно увидеть, что между буквами «E» и «x» спрятана стрелка, указывающая вперед ⬆️. Это символизирует движение вперед и прогресс.</div><div class="article-para">По данным компании McKinsey, хорошая идентичность бренда может увеличить продажи на 10-15%. И логотип FedEx - яркий пример этого. Согласно Forbes, компания FedEx увеличила свою прибыль на 13% после изменения логотипа.</div><div class="article-para">Но что можно взять на заметку для своего бизнеса? Первое - это внимание к деталям. Логотип FedEx - это не просто красивый дизайн, а символ компании, который передает ее ценности и миссию 🚀</div><div class="article-para">Итак, какой урок можно извлечь из истории логотипа FedEx? Можно ли создать логотип, который будет таким же успешным? Ответ на этот вопрос каждый найдет для себя, но одно rõчно - логотип FedEx останется одним из самых гениальных логотипов в истории.</div></div>
+            </div>
+            <div class="kw-card">
+              <div class="kw-label">Ключевые слова (SEO)</div>
+              <div class="kw-tags" id="kwTags"><div class="kw-tag">логотип</div><div class="kw-tag">FedEx</div><div class="kw-tag">дизайн</div><div class="kw-tag">бренд</div><div class="kw-tag">маркетинг</div><div class="kw-tag">успех</div><div class="kw-tag">бизнес</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEO panel -->
+        <div class="panel" id="panel-seo">
+    <div class="seo-grid">
+      <div class="seo-metric">
+        <div class="seo-metric-label">SEO-оценка</div>
+        <div class="seo-metric-val">85<span style="font-size:13px;color:var(--text3)">/100</span></div>
+        <div class="bar-wrap"><div class="bar-fill green" style="width:85%"></div></div>
+      </div>
+      <div class="seo-metric">
+        <div class="seo-metric-label">Уникальность</div>
+        <div class="seo-metric-val">94<span style="font-size:13px;color:var(--text3)">%</span></div>
+        <div class="bar-wrap"><div class="bar-fill green" style="width:94%"></div></div>
+      </div>
+      <div class="seo-metric">
+        <div class="seo-metric-label">Виральный потенциал</div>
+        <div class="seo-metric-val">8<span style="font-size:13px;color:var(--text3)">/10</span></div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:80%"></div></div>
+      </div>
+      <div class="seo-metric">
+        <div class="seo-metric-label">Вовлечённость</div>
+        <div class="seo-metric-val">8<span style="font-size:13px;color:var(--text3)">/10</span></div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:80%"></div></div>
+      </div>
+    </div>
+    <div class="kw-card">
+      <div class="kw-label">Плотность ключевых слов</div>
+      <div class="article-para" style="font-size:13px;color:var(--text2);">Плотность ключевых слов: 1,2%</div>
+    </div>
+    <div class="kw-card">
+      <div class="kw-label">Рекомендации SEO</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:12px;color:var(--text2);display:flex;gap:8px;"><span style="color:var(--green)">✓</span>Используйте длиннохвостые ключевые слова</div><div style="font-size:12px;color:var(--text2);display:flex;gap:8px;"><span style="color:var(--green)">✓</span>Оптимизируйтеmeta-описания</div><div style="font-size:12px;color:var(--text2);display:flex;gap:8px;"><span style="color:var(--green)">✓</span>Используйте header-теги</div>
+      </div>
+    </div>
+  </div>
+
+        <!-- Headlines panel -->
+        <div class="panel" id="panel-headlines">
+    <div style="font-size:12px;color:var(--text3);padding:2px 0;">Нажмите на заголовок, чтобы использовать его в статье</div>
+    
+      <div class="variant-card" onclick="useHeadline(0)">
+        <div class="variant-text">Секрет логотипа FedEx</div>
+        <div class="use-btn">Использовать</div>
+      </div>
+    
+      <div class="variant-card" onclick="useHeadline(1)">
+        <div class="variant-text">Логотип, который изменил все</div>
+        <div class="use-btn">Использовать</div>
+      </div>
+    
+      <div class="variant-card" onclick="useHeadline(2)">
+        <div class="variant-text">Гениальная идея, которая принесла успех</div>
+        <div class="use-btn">Использовать</div>
+      </div>
+    
+      <div class="variant-card" onclick="useHeadline(3)">
+        <div class="variant-text">FedEx: логотип, который стоит миллионов</div>
+        <div class="use-btn">Использовать</div>
+      </div>
+    
+      <div class="variant-card" onclick="useHeadline(4)">
+        <div class="variant-text">Сила логотипа</div>
+        <div class="use-btn">Использовать</div>
+      </div>
+    
+  </div>
+
+
+        <!-- Instruction panel -->
+        <div class="panel" id="panel-instruction">
+          <div class="instr-panel">
+            <div class="instr-hint">
+              Настройте свой стиль один раз — будет применяться автоматически к каждой статье. Не нужно повторять каждый раз.
+            </div>
+            <div class="instr-group">
+              <div class="instr-group-label">Быстрый выбор стиля</div>
+              <div class="style-chips" id="styleChips">
+                <div class="style-chip" data-val="Разговорный">💬 Разговорный</div>
+                <div class="style-chip" data-val="Эмоциональный">❤️ Эмоциональный</div>
+                <div class="style-chip" data-val="Научный">🧪 Научный</div>
+                <div class="style-chip on" data-val="Провокационный">🔥 Провокация</div>
+                <div class="style-chip on" data-val="Сторительский">📖 Нарратив</div>
+                <div class="style-chip" data-val="Практический">✅ Практический</div>
+                <div class="style-chip" data-val="С юмором">😊 С юмором</div>
+                <div class="style-chip on" data-val="Жёсткий">⚡ Жёсткий</div>
+              </div>
+            </div>
+            <div class="instr-group">
+              <div class="instr-group-label">Авторский голос и манера</div>
+              <textarea class="instr-textarea" id="instrVoice" rows="4" placeholder="Например: Пишу как опытный практик. Короткие ударные предложения. Чередую с длинными. Говорю прямо, без клише."></textarea>
+            </div>
+            <div class="instr-group">
+              <div class="instr-group-label">Целевая аудитория</div>
+              <textarea class="instr-textarea" id="instrAudience" rows="2" placeholder="Например: Молодые предприниматели 25-35 лет, русскоязычные, интересуются технологиями"></textarea>
+            </div>
+            <div class="instr-group">
+              <div class="instr-group-label">Что запрещено / избегать</div>
+              <textarea class="instr-textarea" id="instrAvoid" rows="2" placeholder="Например: Не начинать абзацы с ‘Сегодня’. Избегать пафоса. Не использовать штампы."></textarea>
+            </div>
+            <div class="instr-group">
+              <div class="instr-group-label">Дополнительные требования</div>
+              <textarea class="instr-textarea" id="instrExtra" rows="3" placeholder="Например: Всегда заканчивай статью вопросом. Используй русские пословицы. Не больше 2 эмодзи на абзац."></textarea>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <button class="instr-save-btn" onclick="saveInstruction()">💾 Сохранить</button>
+              <span class="instr-saved" id="savedBadge">✓ Сохранено</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sources panel -->
+        <div class="panel" id="panel-sources">
+    <div class="kw-card">
+      <div class="kw-label">Рекомендуемые источники</div>
+      <div class="sources">
+        
+          <div class="source-item">
+            <span class="source-ico">🔗</span>
+            <span style="color:var(--text2)">Forbes</span>
+          </div>
+        
+          <div class="source-item">
+            <span class="source-ico">🔗</span>
+            <span style="color:var(--text2)">McKinsey</span>
+          </div>
+        
+          <div class="source-item">
+            <span class="source-ico">🔗</span>
+            <span style="color:var(--text2)">Reuters</span>
+          </div>
+        
+          <div class="source-item">
+            <span class="source-ico">🔗</span>
+            <span style="color:var(--text2)">Wikipedia</span>
+          </div>
+        
+      </div>
+    </div>
+    <div class="kw-card" style="margin-top:0">
+      <div class="kw-label" style="margin-bottom:6px">Примечание</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.6">Источники подобраны автоматически по теме. Рекомендуем проверить актуальность данных перед публикацией.</div>
+    </div>
+  </div>
+
+      </div>
+
+      <!-- Action bar -->
+      <div class="action-bar" id="actionBar" style="display: flex;">
+        <button class="act-btn" onclick="regenerate()">↺ Перегенерировать</button>
+        <button class="act-btn" onclick="copyText()">⎘ Копировать</button>
+        <button class="act-btn primary" onclick="exportTxt()">↓ Скачать .txt</button>
+        <button class="act-btn" id="pubVkBtn" onclick="openPublishModal()" style="background:rgba(0,119,255,0.15);border-color:rgba(0,119,255,0.4);color:#60a5fa;display:none;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.6-.19 1.37 1.26 2.186 1.817.617.422 1.086.33 1.086.33l2.182-.03s1.141-.071.6-.967c-.044-.073-.314-.661-1.618-1.869-1.366-1.265-1.184-1.06.462-3.246.999-1.332 1.399-2.146 1.274-2.494-.12-.332-.855-.244-.855-.244l-2.455.015s-.182-.025-.317.055c-.132.078-.217.26-.217.26s-.387 1.028-.903 1.902c-1.088 1.848-1.524 1.946-1.703 1.832-.414-.267-.311-1.075-.311-1.649 0-1.793.272-2.54-.529-2.733-.266-.064-.461-.107-1.141-.114-.872-.009-1.609.003-2.025.207-.278.136-.492.44-.362.457.162.022.528.099.722.363.25.341.241 1.107.241 1.107s.144 2.11-.336 2.372c-.329.18-.782-.187-1.754-1.862-.498-.859-.874-1.81-.874-1.81s-.072-.176-.202-.27c-.156-.114-.375-.15-.375-.15l-2.33.015s-.35.01-.478.162c-.115.135-.009.414-.009.414s1.826 4.27 3.893 6.422c1.896 1.973 4.047 1.843 4.047 1.843h.974z"></path></svg>
+          Опубликовать в ВК
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────
+let currentData = null;
+
+// ── Chips toggle (multi) ──────────────
+document.querySelectorAll('#platforms .chip, #langs .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    if (c.closest('#langs')) {
+      c.closest('#langs').querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+    }
+    c.classList.toggle('on');
+  });
+});
+
+// ── Tone toggle (single) ──────────────
+document.querySelectorAll('#tones .tone-item').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#tones .tone-item').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+  });
+});
+
+// ── Tabs ──────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+    tab.classList.add('on');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('on');
+  });
+});
+
+// ── Slider ────────────────────────────
+const slider = document.getElementById('lenSlider');
+const lenVal = document.getElementById('lenVal');
+const lenMap = ['~1 мин','~2 мин','~3 мин','~4 мин','~5 мин'];
+slider.addEventListener('input', () => { lenVal.textContent = lenMap[slider.value - 1]; });
+
+// ── Helpers ───────────────────────────
+function getSelected(id) {
+  return [...document.querySelectorAll(`#${id} .chip.on`)].map(c => c.dataset.val).join(', ');
+}
+function getTone() {
+  const el = document.querySelector('#tones .tone-item.on');
+  return el ? el.dataset.val : 'вирусный';
+}
+function getLen() { return lenMap[slider.value - 1]; }
+
+function showEmpty() {
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('articleResult').style.display = 'none';
+  document.getElementById('actionBar').style.display = 'none';
+}
+function showLoading() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'flex';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('articleResult').style.display = 'none';
+  document.getElementById('actionBar').style.display = 'none';
+}
+function showError(msg) {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = 'flex';
+  document.getElementById('errorMsg').textContent = msg;
+  document.getElementById('articleResult').style.display = 'none';
+  document.getElementById('actionBar').style.display = 'none';
+}
+function showResult() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('articleResult').style.display = 'flex';
+  document.getElementById('actionBar').style.display = 'flex';
+}
+
+function setStep(n) {
+  ['step1','step2','step3','step4'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (i < n-1) { el.className = 'lstep done'; el.textContent = '✓ ' + el.textContent.replace(/^[⟳○✓] /,''); }
+    else if (i === n-1) { el.className = 'lstep active'; el.textContent = '⟳ ' + el.textContent.replace(/^[⟳○✓] /,''); }
+    else { el.className = 'lstep wait'; el.textContent = '○ ' + el.textContent.replace(/^[⟳○✓] /,''); }
+  });
+}
+
+function setBtnLoading(on) {
+  const btn = document.getElementById('genBtn');
+  const icon = document.getElementById('btnIcon');
+  const txt = document.getElementById('btnText');
+  btn.disabled = on;
+  icon.textContent = on ? '↻' : '✦';
+  if (on) icon.classList.add('spin'); else icon.classList.remove('spin');
+  txt.textContent = on ? 'Генерирую…' : 'Генерировать';
+}
+
+// ── Render helpers ────────────────────
+function renderArticle(data) {
+  currentData = data;
+
+  // Stats
+  const sb = document.getElementById('statsBar');
+  sb.innerHTML = `
+    <div class="stat"><div class="dot dot-green"></div> SEO: <span class="stat-val">${data.seo_score}/100</span></div>
+    <div class="stat"><div class="dot ${data.uniqueness >= 90 ? 'dot-green':'dot-amber'}"></div> Уникальность: <span class="stat-val">${data.uniqueness}%</span></div>
+    <div class="stat"><div class="dot dot-green"></div> Читаемость: <span class="stat-val">${data.readability}</span></div>
+    <div class="stat">⏱ Чтение: <span class="stat-val">${data.read_time}</span></div>
+    <div class="stat">📝 Слов: <span class="stat-val">${data.word_count}</span></div>
+    <div class="stat">🔥 Виральность: <span class="stat-val">${data.virality}/10</span></div>
+  `;
+
+  // Title
+  document.getElementById('artTitle').textContent = data.title;
+
+  // Hashtags
+  const ht = document.getElementById('artHashtags');
+  ht.innerHTML = data.hashtags.map(h => `<div class="hashtag">${h}</div>`).join('');
+
+  // Body - each paragraph separated clearly
+  const body = document.getElementById('artBody');
+  body.innerHTML = data.paragraphs.map((p,i) =>
+    `<div class="article-para">${i===0 ? `<span class="lead">${p.split('.')[0]}.</span>${p.slice(p.indexOf('.')+1)}` : p}</div>`
+  ).join('');
+
+  // Keywords
+  const kw = document.getElementById('kwTags');
+  kw.innerHTML = data.keywords.map(k => `<div class="kw-tag">${k}</div>`).join('');
+
+  // SEO panel
+  renderSEO(data);
+
+  // Headlines panel
+  renderHeadlines(data);
+
+  // Sources panel
+  renderSources(data);
+
+  showResult();
+}
+
+function renderSEO(data) {
+  const panel = document.getElementById('panel-seo');
+  panel.innerHTML = `
+    <div class="seo-grid">
+      <div class="seo-metric">
+        <div class="seo-metric-label">SEO-оценка</div>
+        <div class="seo-metric-val">${data.seo_score}<span style="font-size:13px;color:var(--text3)">/100</span></div>
+        <div class="bar-wrap"><div class="bar-fill green" style="width:${data.seo_score}%"></div></div>
+      </div>
+      <div class="seo-metric">
+        <div class="seo-metric-label">Уникальность</div>
+        <div class="seo-metric-val">${data.uniqueness}<span style="font-size:13px;color:var(--text3)">%</span></div>
+        <div class="bar-wrap"><div class="bar-fill ${data.uniqueness>=90?'green':'amber'}" style="width:${data.uniqueness}%"></div></div>
+      </div>
+      <div class="seo-metric">
+        <div class="seo-metric-label">Виральный потенциал</div>
+        <div class="seo-metric-val">${data.virality}<span style="font-size:13px;color:var(--text3)">/10</span></div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${data.virality*10}%"></div></div>
+      </div>
+      <div class="seo-metric">
+        <div class="seo-metric-label">Вовлечённость</div>
+        <div class="seo-metric-val">${data.engagement}<span style="font-size:13px;color:var(--text3)">/10</span></div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${data.engagement*10}%"></div></div>
+      </div>
+    </div>
+    <div class="kw-card">
+      <div class="kw-label">Плотность ключевых слов</div>
+      <div class="article-para" style="font-size:13px;color:var(--text2);">${data.keyword_density_note}</div>
+    </div>
+    <div class="kw-card">
+      <div class="kw-label">Рекомендации SEO</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${data.seo_tips.map(t=>`<div style="font-size:12px;color:var(--text2);display:flex;gap:8px;"><span style="color:var(--green)">✓</span>${t}</div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderHeadlines(data) {
+  const panel = document.getElementById('panel-headlines');
+  panel.innerHTML = `
+    <div style="font-size:12px;color:var(--text3);padding:2px 0;">Нажмите на заголовок, чтобы использовать его в статье</div>
+    ${data.headline_variants.map((h,i) => `
+      <div class="variant-card" onclick="useHeadline(${i})">
+        <div class="variant-text">${h}</div>
+        <div class="use-btn">Использовать</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderSources(data) {
+  const panel = document.getElementById('panel-sources');
+  panel.innerHTML = `
+    <div class="kw-card">
+      <div class="kw-label">Рекомендуемые источники</div>
+      <div class="sources">
+        ${data.sources.map(s=>`
+          <div class="source-item">
+            <span class="source-ico">🔗</span>
+            <span style="color:var(--text2)">${s}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="kw-card" style="margin-top:0">
+      <div class="kw-label" style="margin-bottom:6px">Примечание</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.6">Источники подобраны автоматически по теме. Рекомендуем проверить актуальность данных перед публикацией.</div>
+    </div>
+  `;
+}
+
+function useHeadline(i) {
+  if (!currentData) return;
+  currentData.title = currentData.headline_variants[i];
+  document.getElementById('artTitle').textContent = currentData.title;
+  document.querySelectorAll('.tab')[0].click();
+}
+
+
+
+
+// instruction
+document.querySelectorAll('.style-chip').forEach(ch => {
+  ch.addEventListener('click', () => { ch.classList.toggle('on'); });
+});
+
+function saveInstruction() {
+  localStorage.setItem('contentai_instr', JSON.stringify(getInstruction()));
+  const b = document.getElementById('savedBadge');
+  b.style.display = 'inline';
+  setTimeout(() => { b.style.display = 'none'; }, 2000);
+}
+
+function loadInstruction() {
+  try {
+    const s = localStorage.getItem('contentai_instr');
+    if (!s) return;
+    const d = JSON.parse(s);
+    if (d.voice) document.getElementById('instrVoice').value = d.voice;
+    if (d.audience) document.getElementById('instrAudience').value = d.audience;
+    if (d.avoid) document.getElementById('instrAvoid').value = d.avoid;
+    if (d.extra) document.getElementById('instrExtra').value = d.extra;
+    if (d.styles) d.styles.forEach(v => {
+      const ch = document.querySelector('.style-chip[data-val="' + v + '"]');
+      if (ch) ch.classList.add('on');
+    });
+  } catch(e) {}
+}
+
+function getInstruction() {
+  return {
+    voice: document.getElementById('instrVoice').value.trim(),
+    audience: document.getElementById('instrAudience').value.trim(),
+    avoid: document.getElementById('instrAvoid').value.trim(),
+    extra: document.getElementById('instrExtra').value.trim(),
+    styles: [...document.querySelectorAll('.style-chip.on')].map(c => c.dataset.val)
+  };
+}
+
+function buildInstructionBlock() {
+  const i = getInstruction();
+  const parts = [];
+  if (i.styles.length) parts.push('\u0421тиль: ' + i.styles.join(', '));
+  if (i.voice) parts.push('\u0410вторский голос: ' + i.voice);
+  if (i.audience) parts.push('\u0410удитория: ' + i.audience);
+  if (i.avoid) parts.push('\u0418збегать: ' + i.avoid);
+  if (i.extra) parts.push('\u0414оп: ' + i.extra);
+  if (!parts.length) return '';
+  return '\n\nПЕРСОНАЛЬНЫЕ ТРЕБОВАНИЯ:\n' + parts.map(p => '- ' + p).join('\n');
+}
+
+loadInstruction();
+
+// ── Limits ────────────────────────────
+let lastLimits = null;
+
+function formatNum(n) {
+  if (n === null || n === undefined) return '—';
+  n = parseInt(n);
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+  return String(n);
+}
+
+function formatReset(ms) {
+  if (!ms) return '';
+  const s = Math.ceil(parseInt(ms) / 1000);
+  if (s < 60) return 'сброс через ' + s + 'с';
+  return 'сброс через ' + Math.ceil(s/60) + 'м';
+}
+
+function pct(used, limit) {
+  if (!limit || !used) return 0;
+  return Math.min(100, Math.round((parseInt(used) / parseInt(limit)) * 100));
+}
+
+function barClass(p) {
+  if (p >= 90) return 'low';
+  if (p >= 70) return 'warn';
+  return 'ok';
+}
+
+function renderLimits(h) {
+  // Parse headers - Groq sends these:
+  // x-ratelimit-limit-tokens, x-ratelimit-remaining-tokens, x-ratelimit-reset-tokens
+  // x-ratelimit-limit-requests, x-ratelimit-remaining-requests, x-ratelimit-reset-requests
+  const limTok = h.get ? h.get('x-ratelimit-limit-tokens') : h['x-ratelimit-limit-tokens'];
+  const remTok = h.get ? h.get('x-ratelimit-remaining-tokens') : h['x-ratelimit-remaining-tokens'];
+  const resetTok = h.get ? h.get('x-ratelimit-reset-tokens') : h['x-ratelimit-reset-tokens'];
+  const limReq = h.get ? h.get('x-ratelimit-limit-requests') : h['x-ratelimit-limit-requests'];
+  const remReq = h.get ? h.get('x-ratelimit-remaining-requests') : h['x-ratelimit-remaining-requests'];
+  const resetReq = h.get ? h.get('x-ratelimit-reset-requests') : h['x-ratelimit-reset-requests'];
+
+  if (!limTok && !limReq) {
+    document.getElementById('limitsBody').innerHTML =
+      '<div class="limits-note">Лимиты недоступны для этой модели</div>';
+    return;
+  }
+
+  const usedTok = limTok && remTok ? parseInt(limTok) - parseInt(remTok) : null;
+  const usedReq = limReq && remReq ? parseInt(limReq) - parseInt(remReq) : null;
+  const pTok = pct(usedTok, limTok);
+  const pReq = pct(usedReq, limReq);
+
+  const status = document.getElementById('limitsStatus');
+  const maxP = Math.max(pTok, pReq);
+  status.className = 'limits-status ' + (maxP >= 90 ? 'empty' : maxP >= 70 ? 'warn' : 'ok');
+
+  // Parse reset time (format like "1m30s" or "45s" or ms number)
+  function parseReset(val) {
+    if (!val) return '';
+    // Groq sometimes returns "Xms" or "Xs" or "Xm Ys"
+    if (/^\d+$/.test(val)) return formatReset(val);
+    const mMatch = val.match(/(\d+)m/);
+    const sMatch = val.match(/(\d+\.?\d*)s/);
+    let totalMs = 0;
+    if (mMatch) totalMs += parseInt(mMatch[1]) * 60000;
+    if (sMatch) totalMs += parseFloat(sMatch[1]) * 1000;
+    return totalMs > 0 ? formatReset(totalMs) : '';
+  }
+
+  document.getElementById('limitsBody').innerHTML = `
+    <div class="limit-row">
+      <div class="limit-row-head">
+        <div class="limit-row-label">Токены / мин</div>
+        <div class="limit-row-val">${formatNum(remTok)} <span style="color:var(--text3)">/ ${formatNum(limTok)}</span></div>
+      </div>
+      <div class="limit-bar-wrap"><div class="limit-bar-fill ${barClass(pTok)}" style="width:${100-pTok}%"></div></div>
+      ${parseReset(resetTok) ? `<div class="limits-note">${parseReset(resetTok)}</div>` : ''}
+    </div>
+    <div class="limit-row">
+      <div class="limit-row-head">
+        <div class="limit-row-label">Запросы / мин</div>
+        <div class="limit-row-val">${formatNum(remReq)} <span style="color:var(--text3)">/ ${formatNum(limReq)}</span></div>
+      </div>
+      <div class="limit-bar-wrap"><div class="limit-bar-fill ${barClass(pReq)}" style="width:${100-pReq}%"></div></div>
+      ${parseReset(resetReq) ? `<div class="limits-note">${parseReset(resetReq)}</div>` : ''}
+    </div>
+    <div class="limits-note" id="limitsTime">обновлено только что</div>
+  `;
+  lastLimits = { limTok, remTok, limReq, remReq };
+}
+
+async function fetchLimits() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Сначала введите API ключ'); return; }
+  const modelVal = (document.querySelector('#modelList .tone-item.on') || {dataset:{val:'llama-3.3-70b-versatile'}}).dataset.val;
+
+  document.getElementById('limitsBody').innerHTML = '<div class="limits-note">↻ Загружаю...</div>';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: modelVal,
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'hi' }]
+      })
+    });
+    renderLimits(res.headers);
+  } catch(e) {
+    document.getElementById('limitsBody').innerHTML =
+      '<div class="limits-note" style="color:var(--red)">Ошибка: ' + e.message + '</div>';
+  }
+}
+
+// Auto-update time label every 30s
+setInterval(() => {
+  const el = document.getElementById('limitsTime');
+  if (el) {
+    const now = new Date();
+    el.textContent = 'обновлено в ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  }
+}, 30000);
+
+// ── Model toggle ────────────────────────
+document.querySelectorAll('#modelList .tone-item').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#modelList .tone-item').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+  });
+});
+
+// ── API Call ───────────────────────────
+async function generate() {
+  const topic = document.getElementById('topicInput').value.trim();
+  const apiKey = document.getElementById('apiKey').value.trim();
+
+  if (!topic) { alert('Введите тему статьи'); return; }
+  if (!apiKey) { alert('Введите API ключ Groq (вставьте в левую панель)'); return; }
+
+  setBtnLoading(true);
+  showLoading();
+
+  // Reset loader steps text
+  document.getElementById('step1').textContent = '⟳ Анализирую тему…';
+  document.getElementById('step2').textContent = '○ Подбираю SEO-ключи…';
+  document.getElementById('step3').textContent = '○ Пишу статью…';
+  document.getElementById('step4').textContent = '○ Финальная обработка…';
+
+  const platforms = getSelected('platforms') || 'ВКонтакте';
+  const tone = getTone();
+  const lang = getSelected('langs') || 'русский';
+  const len = getLen();
+  const words = {'~1 мин':150,'~2 мин':300,'~3 мин':450,'~4 мин':600,'~5 мин':750}[len] || 300;
+
+  const prompt = `Ты профессиональный копирайтер и SEO-специалист. Напиши полноценную статью по теме: "${topic}".
+
+Параметры:
+- Платформы публикации: ${platforms}
+- Тон: ${tone}
+- Язык: ${lang}
+- Объём: ${words} слов (${len} чтения)
+
+СТРУКТУРА ТЕКСТА (внутренние правила — эти названия НИКОГДА не писать в тексте):
+- Ровно 6 абзацев, каждый — отдельный элемент массива paragraphs
+- Стиль как в качественных статьях Яндекс Дзен: короткие абзацы, каждый 3-5 предложений, 50-80 слов
+- Предложения короткие и средние — читатель не должен забыть начало до конца строки
+- Каждый абзац — одна законченная мысль, никаких «простыней»
+- Абзац 1: мощный хук — провокация, неожиданный факт или вопрос. Читатель зацеплен с первой строки
+- Абзац 2: контекст и суть — конкретные данные, без воды
+- Абзац 3: углубление темы, 1 эмодзи вписано органично в текст (не в начале)
+- Абзац 4: цифры и факты из авторитетных источников (McKinsey, Forbes, Reuters, WEF и др.)
+- Абзац 5: практический угол или неожиданный поворот для читателя, 1 эмодзи органично
+- Абзац 6: сильный вывод или провокационный вопрос — читатель хочет оставить комментарий
+- АБСОЛЮТНЫЙ ЗАПРЕТ: никогда не начинать абзац с «Абзац», цифры, служебной пометки или описания
+- Каждый абзац начинается сразу с живого текста — первое слово уже цепляет
+
+Верни ТОЛЬКО валидный JSON (без markdown, без \`\`\`):
+{
+  "title": "цепляющий заголовок с 1-2 эмодзи и интригой или числами",
+  "headline_variants": ["вариант 2", "вариант 3", "вариант 4", "вариант 5"],
+  "hashtags": ["#хэштег1","#хэштег2","#хэштег3","#хэштег4","#хэштег5","#хэштег6"],
+  "paragraphs": ["<готовый текст абзаца 1>","<готовый текст абзаца 2>","<готовый текст абзаца 3>","<готовый текст абзаца 4>","<готовый текст абзаца 5>","<готовый текст абзаца 6>"],
+  "keywords": ["ключ 1","ключ 2","ключ 3","ключ 4","ключ 5","ключ 6","ключ 7","ключ 8"],
+  "sources": ["Источник 1 — название организации","Источник 2","Источник 3","Источник 4"],
+  "seo_score": 85,
+  "uniqueness": 94,
+  "virality": 8,
+  "engagement": 8,
+  "readability": "Отлично",
+  "read_time": "2 мин 30 сек",
+  "word_count": 450,
+  "keyword_density_note": "описание плотности ключей",
+  "seo_tips": ["совет 1","совет 2","совет 3"]
+}`;
+
+  let stepTimer;
+  let stepN = 1;
+  setStep(1);
+  stepTimer = setInterval(() => {
+    stepN++;
+    if (stepN <= 4) setStep(stepN);
+    else clearInterval(stepTimer);
+  }, 1800);
+
+  const modelVal = (document.querySelector('#modelList .tone-item.on') || {dataset:{val:'meta-llama/llama-3.3-70b-instruct:free'}}).dataset.val;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: modelVal,
+        temperature: 0.9,
+        max_tokens: 3500,
+        messages: [
+          { role: 'system', content: 'Отвечай только валидным JSON без пояснений и без markdown.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+
+    clearInterval(stepTimer);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err.error?.message || `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const cleaned = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(cleaned);
+    renderLimits(res.headers);
+    renderArticle(parsed);
+
+  } catch(e) {
+    clearInterval(stepTimer);
+    showError(e.message || 'Неизвестная ошибка. Проверьте API ключ и интернет-соединение.');
+  } finally {
+    setBtnLoading(false);
+  }
+}
+
+// ── Enter key ─────────────────────────
+document.getElementById('topicInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generate();
+});
+
+// ── Actions ───────────────────────────
+function regenerate() { generate(); }
+
+function copyText() {
+  if (!currentData) return;
+  const text = `${currentData.title}\n\n${currentData.paragraphs.join('\n\n')}\n\n${currentData.hashtags.join(' ')}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.act-btn:nth-child(2)');
+    const orig = btn.innerHTML; btn.innerHTML = '✓ Скопировано';
+    setTimeout(() => { btn.innerHTML = orig; }, 1500);
+  });
+}
+
+function exportTxt() {
+  if (!currentData) return;
+  const text = `${currentData.title}\n\n${currentData.paragraphs.join('\n\n')}\n\nКлючевые слова: ${currentData.keywords.join(', ')}\n\n${currentData.hashtags.join(' ')}`;
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'article.txt'; a.click();
+}
+
+// ── VK Auth ───────────────────────────
+let vkToken = localStorage.getItem('vk_token') || null;
+let vkGroupId = localStorage.getItem('vk_group_id') || '0';
+const VK_APP_ID = '2685278';
+const VK_REDIRECT_URI = 'https://strannik42762-create.github.io/contentai/callback.html';
+
+function vkLogin() {
+  const url = `https://oauth.vk.com/authorize?client_id=${VK_APP_ID}&display=popup&redirect_uri=${encodeURIComponent(VK_REDIRECT_URI)}&scope=wall,groups&response_type=token&v=5.199`;
+  const popup = window.open(url, 'vk_auth', 'width=700,height=560,left=200,top=100');
+  if (!popup) { alert('Разрешите всплывающие окна и попробуйте снова'); return; }
+
+  window._vkAuthCallback = function(token, userId) {
+    vkToken = token;
+    localStorage.setItem('vk_token', token);
+    localStorage.setItem('vk_user_id', userId);
+    showVkConnected();
+    loadVKUserName(userId);
+  };
+
+  const timer = setInterval(() => {
+    if (!popup || popup.closed) { clearInterval(timer); }
+    try {
+      const u = popup.location.href;
+      if (u.includes('access_token=')) {
+        clearInterval(timer);
+        popup.close();
+        const hash = u.split('#')[1] || '';
+        const params = new URLSearchParams(hash);
+        const token = params.get('access_token');
+        const userId = params.get('user_id');
+        if (token && userId) {
+          vkToken = token;
+          localStorage.setItem('vk_token', token);
+          localStorage.setItem('vk_user_id', userId);
+          showVkConnected();
+          loadVKUserName(userId);
+        }
+      }
+    } catch(e) {}
+  }, 400);
+  setTimeout(() => clearInterval(timer), 120000);
+}
+
+async function loadVKUserName(userId) {
+  try {
+    const res = await fetch(`https://api.vk.com/method/users.get?user_ids=${userId}&fields=photo_50&access_token=${vkToken}&v=5.199`);
+    const data = await res.json();
+    const user = data.response?.[0];
+    if (user) {
+      const name = user.first_name + ' ' + user.last_name;
+      localStorage.setItem('vk_user_name', name);
+      document.getElementById('vkName').textContent = name;
+      if (user.photo_50) {
+        const img = document.getElementById('vkAvatar');
+        img.src = user.photo_50;
+        img.style.display = 'block';
+        document.getElementById('vkAvatarPlaceholder').style.display = 'none';
+      }
+    }
+  } catch(e) {}
+}
+
+function showVkConnected() {
+  document.getElementById('vkLoginBtn').style.display = 'none';
+  document.getElementById('vkProfile').style.display = 'flex';
+  const grp = document.getElementById('vkGroupIdRow');
+  if (grp) grp.style.display = 'flex';
+  if (currentData && document.getElementById('pubVkBtn')) {
+    document.getElementById('pubVkBtn').style.display = 'flex';
+  }
+}
+
+function vkLogout() {
+  vkToken = null; vkGroupId = '0';
+  ['vk_token','vk_user_id','vk_user_name','vk_photo','vk_group_id'].forEach(k => localStorage.removeItem(k));
+  document.getElementById('vkLoginBtn').style.display = 'flex';
+  document.getElementById('vkProfile').style.display = 'none';
+  const grp = document.getElementById('vkGroupIdRow');
+  if (grp) grp.style.display = 'none';
+  if (document.getElementById('pubVkBtn')) document.getElementById('pubVkBtn').style.display = 'none';
+}
+
+function saveVkGroup() {
+  const val = document.getElementById('vkGroupIdInput').value.trim();
+  vkGroupId = val || '0';
+  localStorage.setItem('vk_group_id', vkGroupId);
+  const badge = document.getElementById('vkGroupSaved');
+  if (badge) { badge.style.display = 'inline'; setTimeout(() => badge.style.display = 'none', 1500); }
+}
+
+function restoreVKSession() {
+  const token = localStorage.getItem('vk_token');
+  const groupId = localStorage.getItem('vk_group_id') || '0';
+  const name = localStorage.getItem('vk_user_name') || '';
+  const photo = localStorage.getItem('vk_photo') || '';
+  const gi = document.getElementById('vkGroupIdInput');
+  if (gi && groupId !== '0') gi.value = groupId;
+  if (token) {
+    vkToken = token;
+    vkGroupId = groupId;
+    if (name) document.getElementById('vkName').textContent = name;
+    if (photo) {
+      document.getElementById('vkAvatar').src = photo;
+      document.getElementById('vkAvatar').style.display = 'block';
+      document.getElementById('vkAvatarPlaceholder').style.display = 'none';
+    }
+    showVkConnected();
+  }
+}
+
+restoreVKSession();
+
+async function publishToVK() {
+  if (!vkToken || !currentData) return;
+  const btn = document.getElementById('pubSendBtn');
+  const status = document.getElementById('pubStatus');
+  btn.disabled = true;
+  btn.textContent = 'Публикую...';
+  status.textContent = '';
+
+  const text = currentData.title + '\n\n' + currentData.paragraphs.join('\n\n') + '\n\n' + currentData.hashtags.join(' ');
+  const ownerId = vkGroupId && vkGroupId !== '0' ? '&owner_id=-' + vkGroupId.replace('-','') : '';
+
+  try {
+    const res = await fetch('https://api.vk.com/method/wall.post?message=' + encodeURIComponent(text) + ownerId + '&access_token=' + vkToken + '&v=5.199', { method: 'POST' });
+    const data = await res.json();
+    if (data.response?.post_id) {
+      status.textContent = '✓ Опубликовано! Пост #' + data.response.post_id;
+      status.className = 'pub-status ok';
+      btn.textContent = '✓ Готово';
+      setTimeout(() => closePubModal(), 2500);
+    } else {
+      const errMsg = data.error?.error_msg || 'Неизвестная ошибка';
+      status.textContent = '✗ ' + errMsg;
+      status.className = 'pub-status err';
+      btn.disabled = false;
+      btn.textContent = 'Попробовать снова';
+    }
+  } catch(e) {
+    status.textContent = '✗ ' + e.message;
+    status.className = 'pub-status err';
+    btn.disabled = false;
+    btn.textContent = 'Попробовать снова';
+  }
+}
+
+</script>
+
+
+
+<!-- Publish Modal -->
+<div class="pub-overlay" id="pubOverlay" onclick="closePubIfBg(event)">
+  <div class="pub-modal">
+    <div class="pub-title">📤 Публикация в ВКонтакте</div>
+    <div class="pub-subtitle">Статья будет опубликована от вашего имени</div>
+
+    <div class="pub-options">
+      <div class="pub-option selected" id="opt-wall" onclick="togglePubOpt(this)">
+        <div class="pub-option-icon">📝</div>
+        <div class="pub-option-label">На мою стену</div>
+        <div class="pub-option-check">✓</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--text3)">Что публикуется:</div>
+      <div style="font-size:12px;color:var(--text2);background:var(--bg3);border-radius:var(--r-sm);padding:10px 12px;line-height:1.6;max-height:100px;overflow-y:auto" id="pubPreview">—</div>
+    </div>
+
+    <div class="pub-status" id="pubStatus"></div>
+
+    <div class="pub-actions">
+      <button class="pub-cancel" onclick="closePubModal()">Отмена</button>
+      <button class="pub-send" id="pubSendBtn" onclick="publishToVK()">Опубликовать →</button>
+    </div>
+  </div>
+</div>
+</body></html>
