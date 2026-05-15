@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)file:///C:/Users/ai/Downloads/callback_1.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Авторизация ВКонтакте...</title>
+<style>
+  body { background: #0e0e12; color: #f0eeff; font-family: sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; margin: 0; flex-direction: column; gap: 12px; }
+  .icon { font-size: 40px; }
+  .msg { font-size: 14px; color: #9490b0; }
+</style>
+</head>
+<body>
+<div class="icon">✓</div>
+<div>Авторизация прошла успешно</div>
+<div class="msg">Это окно закроется автоматически...</div>
+<script>
+// This page catches the VK OAuth redirect and passes token to opener
+const hash = window.location.hash.substring(1);
+const params = new URLSearchParams(hash);
+const token = params.get('access_token');
+const userId = params.get('user_id');
+
+if (token && userId && window.opener) {
+  // Pass to parent window
+  try {
+    window.opener._vkAuthCallback && window.opener._vkAuthCallback(token, userId);
+  } catch(e) {}
+  // Also store directly
+  localStorage.setItem('vk_token', token);
+  localStorage.setItem('vk_user_id', userId);
+  setTimeout(() => window.close(), 1000);
+} else if (window.location.href.includes('error=')) {
+  document.querySelector('.icon').textContent = '✗';
+  document.querySelector('div:nth-child(2)').textContent = 'Авторизация отменена';
+  setTimeout(() => window.close(), 2000);
+}
+</script>
+
+
+</body></html>
